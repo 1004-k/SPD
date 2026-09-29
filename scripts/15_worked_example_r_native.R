@@ -7,8 +7,7 @@
 # eTable S7:
 #   1. R's random number generator gives different cohorts from the stored ones.
 #   2. The flexible score here is an unpenalized logistic regression with natural
-#      splines and the X1:X2 interaction. The gradient-boosting model used for
-#      the reported analysis has no exact R counterpart.
+#      splines and the X1:X2 interaction. 
 # scripts/12 recomputes the reported values from the stored cohort and
 # predictions. This script is for studying the example further in R.
 #
