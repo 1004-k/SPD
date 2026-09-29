@@ -60,7 +60,7 @@ Results and figures are written to `output/`, which is not tracked by git.
 - Scripts 12, 13 and 16 reproduce the stored results to within 1e-7, and therefore every value printed in the manuscript.
 - Script 09 reproduces eTable S4 exactly.
 - Scripts 07 and 11 regenerate the simulated data. The random draws differ from those behind the reported tables, so the results agree with them to within Monte Carlo error but not digit for digit. The reported eTables S1–S4 are stored in `results/original_tables`.
-- The predicted probabilities in `results/worked_example` come from the main-effects logistic regression and histogram gradient-boosting models described in Supplementary Methods S1. Script 15 (optional; `NATIVE=1 Rscript run_all_checks.R`) regenerates the cohorts and refits comparable models in R, with natural splines in place of gradient boosting, so its numbers differ from the reported ones.
+- The predicted probabilities in `results/worked_example` come from the main-effects logistic regression and histogram gradient-boosting models described in Supplementary Methods S1.
 - In the stored worked-example files, the known-DGM reference-risk score is labelled `Oracle reference-risk logit` (`oracle_probability`).
 - The worked example and the complementarity simulation use Breslow ties; the estimator simulation uses Efron ties. Simulated event times are continuous, so the choice does not change the estimates.
 
