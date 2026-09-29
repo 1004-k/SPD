@@ -1,102 +1,73 @@
-# Scalar SPD (standardized prognostic dependence): simulations + worked example
+# SPD: standardized prognostic dependence
 
-This repository contains **GitHub-ready code** to reproduce the *scalar* SPD results and a small
-worked example using **MIMIC-IV Clinical Database Demo (v2.2)**.
+R code and data for the manuscript "A Standardized Diagnostic for Prognosis-Driven Treatment Deviation in Per-Protocol Pharmacoepidemiologic Studies", submitted to *Pharmacoepidemiology and Drug Safety*.
 
-**Scalar SPD** is defined as the Cox regression coefficient for deviation per **1 SD** higher
-baseline prognostic score. This makes the index **unit-free** and invariant to affine rescaling
-of the underlying prognostic score.
-
-## Repository structure
-
-- `R/`
-  - `project_utils.R`: logging, package checks, MIMIC table I/O helpers
-  - `spd_scalar.R`: scalar SPD estimation + reference computation
-- `config/config.R`: local configuration for the MIMIC demo (data path, baseline window)
-- `scripts/`
-  - `01_build_mimic_primary_vasopressor.R`: build worked-example analysis dataset
-  - `02_fit_spd_primary_vasopressor.R`: fit Cox model for primary definition (any vasopressor)
-  - `03_fit_spd_sensitivity_norepinephrine.R`: sensitivity (norepinephrine-only)
-  - `07_run_sim_spd_scalar.R`: main simulation grid (bias/coverage + invariance)
-  - `09_run_sim_spd_scalar_robust_se_worstcase.R`: worst-case robust-SE check
-  - `10_run_sim_spd_bias_amplifier.R`: illustrative "amplifier" simulation (SPD vs bias)
-- `data/`: **empty by default** (place MIMIC demo here)
-- `output/`: created automatically (ignored by git)
+SPD is the cause-specific Cox coefficient for treatment deviation per standard deviation of a baseline prognostic score. All data in this repository are simulated; there are no patient data.
 
 ## Requirements
 
-R packages used across scripts:
-- `data.table`
-- `survival`
-- `future`
-- `future.apply`
+R with the packages survival, data.table, future and future.apply (tested with R 4.3.3 and survival 3.5-8):
 
-Install them in R:
 ```r
-install.packages(c("data.table","survival","future","future.apply"))
+install.packages(c("survival", "data.table", "future", "future.apply"))
 ```
 
-## Worked example (MIMIC-IV Demo)
+`run_all_checks.R` needs only base R and survival.
 
-### Data (not included)
+## Quick check
 
-Download and unzip **MIMIC-IV Clinical Database Demo (v2.2)** from PhysioNet.
-
-Place the unzipped folder at:
-```
-data/mimic-iv-clinical-database-demo-2.2/
-  hosp/...
-  icu/...
+```bash
+Rscript run_all_checks.R
 ```
 
-Or set the environment variable:
-- `MIMIC_DATA_DIR=/path/to/mimic-iv-clinical-database-demo-2.2`
+This takes a few seconds. It recomputes the reported values that come from stored data and prints each one next to the value in the manuscript:
 
-### Run
-
-From the repository root:
-```r
-source("scripts/01_build_mimic_primary_vasopressor.R")
-source("scripts/02_fit_spd_primary_vasopressor.R")
-source("scripts/03_fit_spd_sensitivity_norepinephrine.R")
-```
-
-Outputs:
-- `output/analysis_dataset_primary_vasopressor.rds`
-- `output/results_primary_vasopressor.csv` (main numbers)
-- `output/results_sensitivity_norepinephrine.csv` (sensitivity)
+- Table 3 and eTable S5, from the stored replicate-level results of the diagnostic-complementarity simulation
+- Table 4 and eTables S6–S7, from the stored evaluation cohort, predicted probabilities and 2,000 bootstrap replicates
+- eTable S8 and eFigure S5, from the stored event-ordering cohort
+- Figures 1 and 2
 
 ## Simulations
 
-### Main scalar SPD simulation grid
-
 ```bash
-Rscript scripts/07_run_sim_spd_scalar.R
+Rscript run_all_simulations.R
 ```
 
-Key environment variables (optional):
-- `OUT_DIR` (default: `output`)
-- `OUT_TAG` (default: `sim_spd_scalar_B{B}`)
-- `B` (default: 200)
-- `N_VEC` (default: `200,800,2000`)
-- `GAMMA_VEC` (default: `0,0.25,0.5,1.0`)
-- `RHO_VEC` (default: `1.0,0.7,0.4`)
-- `DO_REF` (default: 1) and `N_REF`, `B_REF` for pseudo-true reference computation
-- `N_CORES` (default: 3)
+This takes about 20 minutes on two cores (the number of parallel workers is set with `N_CORES`, default 3). It runs:
 
-### Worst-case robust-SE check
+- the estimator-performance simulation for Table 2 and eTables S1–S3 (`scripts/07`, three settings)
+- the model-based versus robust standard-error comparison for eTable S4 (`scripts/09`)
+- eFigures S1–S4 from these results (`scripts/08`)
+- the diagnostic-complementarity simulation for Table 3 and eTable S5 (`scripts/11`)
 
-```bash
-Rscript scripts/09_run_sim_spd_scalar_robust_se_worstcase.R
-```
+Results and figures are written to `output/`, which is not tracked by git.
 
-### Illustrative amplifier simulation
+## Where each result comes from
 
-```bash
-Rscript scripts/10_run_sim_spd_bias_amplifier.R
-```
+| Result | Script | Input |
+|---|---|---|
+| Table 2, eTables S1–S3 | 07 | simulated |
+| eTable S4 | 09 | simulated |
+| eFigures S1–S4 | 08 | output of 07 and 09 |
+| Table 3, eTable S5 | 16 (stored replicates); 11 (new run) | `results/complementarity` |
+| Figure 1 | 14 | none |
+| Figure 2 | 14 | `results/complementarity` |
+| Table 4, eTables S6–S7 | 12 | `results/worked_example` |
+| eTable S8, eFigure S5 | 13 | `results/additional_checks` |
 
-## Notes
+## Agreement with the manuscript
 
-- This code is written to be readable and reproducible rather than maximally optimized.
-- The MIMIC demo cohort is small; treat the worked example as an illustration only.
+- Scripts 12, 13 and 16 reproduce the stored results to within 1e-7, and therefore every value printed in the manuscript.
+- Script 09 reproduces eTable S4 exactly.
+- Scripts 07 and 11 regenerate the simulated data. The random draws differ from those behind the reported tables, so the results agree with them to within Monte Carlo error but not digit for digit. The reported eTables S1–S4 are stored in `results/original_tables`.
+- The predicted probabilities in `results/worked_example` come from the main-effects logistic regression and histogram gradient-boosting models described in Supplementary Methods S1. Script 15 (optional; `NATIVE=1 Rscript run_all_checks.R`) regenerates the cohorts and refits comparable models in R, with natural splines in place of gradient boosting, so its numbers differ from the reported ones.
+- In the stored worked-example files, the known-DGM reference-risk score is labelled `Oracle reference-risk logit` (`oracle_probability`).
+- The worked example and the complementarity simulation use Breslow ties; the estimator simulation uses Efron ties. Simulated event times are continuous, so the choice does not change the estimates.
+
+## Earlier version
+
+The original submission used a worked example based on the MIMIC-IV Clinical Database Demo. That code is kept in the repository history under the tag `v1-original-submission`.
+
+## License
+
+MIT; see `LICENSE`.
